@@ -4,23 +4,6 @@
 
 #include "ofxKazmath.h"
 
-#include <kazmath/mat4.h>
-#include <kazmath/vec3.h>
-
-struct Vertex
-{
-	float x, y, z;
-	
-	Vertex(float x, float y, float z)
-	{
-		this->x = x;
-		this->y = y;
-		this->z = z;
-	}
-};
-
-
-
 class ofApp : public ofBaseApp{
 
 	public:

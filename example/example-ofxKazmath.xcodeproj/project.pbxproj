@@ -250,11 +250,19 @@
 			path = ../src;
 			sourceTree = "<group>";
 		};
-		BB4B014C10F69532006C3DED /* addons */ = {
+		999E7FA5188A4E96007320C1 /* ofxKazmath */ = {
 			isa = PBXGroup;
 			children = (
 				993E5DCA18896D1400293675 /* libs */,
 				993E5DEE18896D1400293675 /* src */,
+			);
+			name = ofxKazmath;
+			sourceTree = "<group>";
+		};
+		BB4B014C10F69532006C3DED /* addons */ = {
+			isa = PBXGroup;
+			children = (
+				999E7FA5188A4E96007320C1 /* ofxKazmath */,
 			);
 			name = addons;
 			sourceTree = "<group>";
