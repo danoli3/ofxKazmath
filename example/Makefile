@@ -4,9 +4,9 @@ ifneq ($(wildcard config.make),)
 	include config.make
 endif
 
-# make sure the the OF_ROOT location is defined
+# make sure the OF_ROOT location is defined
 ifndef OF_ROOT
-    OF_ROOT=../../..
+	OF_ROOT=../../..
 endif
 
 # call the project makefile!

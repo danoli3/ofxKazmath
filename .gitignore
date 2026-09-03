@@ -11,3 +11,5 @@
 *.lai
 *.la
 *.a
+/example/bin/exampleDebug.app
+/example/example.xcodeproj
