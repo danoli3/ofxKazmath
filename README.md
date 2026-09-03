@@ -46,6 +46,16 @@ ofDrawBox(boxSize);
 
 See `example/` for a full demo: a noise-driven cloud of textured boxes transformed with `kmMat4Translation` and `kmMat4RotationAxisAngle`.
 
+### Converters
+
+`ofxKazmath.h` also provides `toKM` / `toOF` overloads converting between openFrameworks types (`ofMatrix4x4`, `ofMatrix3x3`, `ofVec2f/3f/4f`, `ofQuaternion`) and their kazmath counterparts. oF matrices are row-major, kazmath is column-major, so matrix conversion transposes — all converters are lossless round-trips:
+
+```cpp
+ofMatrix4x4 ofMat = /* ... */;
+kmMat4 kmMat = toKM(ofMat);
+ofMatrix4x4 back = toOF(kmMat); // == ofMat
+```
+
 ## Compatibility
 
 Plain C89 code, should build anywhere openFrameworks builds (macOS, Windows, Linux). Tested with the bundled Xcode example project on macOS.

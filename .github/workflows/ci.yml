@@ -1,0 +1,123 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+# Pinned openFrameworks release the addon is verified against.
+env:
+  OF_TAG: "0.12.1"
+
+jobs:
+  linux64:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out addon
+        uses: actions/checkout@v4
+        with:
+          path: ofxKazmath
+
+      - name: Check out openFrameworks
+        run: git clone --depth 1 --branch "$OF_TAG" https://github.com/openframeworks/openFrameworks.git "$HOME/openFrameworks"
+
+      - name: Install Linux dependencies
+        run: sudo "$HOME/openFrameworks/scripts/linux/ubuntu/install_dependencies.sh" -y
+
+      - name: Download openFrameworks libraries
+        run: "$HOME/openFrameworks/scripts/linux/download_libs.sh"
+
+      - name: Install addon
+        run: cp -r ofxKazmath "$HOME/openFrameworks/addons/ofxKazmath"
+
+      - name: Build projectGenerator
+        run: make Release -C "$HOME/openFrameworks/apps/projectGenerator/commandLine" -j$(nproc)
+
+      # Regenerates the example Makefiles from addons.make + addon_config.mk.
+      # This fails if the addon config is invalid, so it verifies PG integration.
+      - name: Regenerate example with projectGenerator
+        run: >-
+          "$HOME/openFrameworks/apps/projectGenerator/commandLine/bin/projectGenerator"
+          -o"$HOME/openFrameworks" -a"ofxKazmath"
+          "$HOME/openFrameworks/addons/ofxKazmath/example"
+
+      - name: Build example
+        run: make -C "$HOME/openFrameworks/addons/ofxKazmath/example" -j$(nproc)
+
+      # All-in-one test: core kazmath sanity + oF/kazmath converter round-trips.
+      # The kazmath C sources must be compiled as C (GL/matrix.c relies on
+      # implicit void* conversion), everything else as C++.
+      - name: Build and run tests
+        run: |
+          cd "$HOME/openFrameworks/addons/ofxKazmath"
+          mkdir -p /tmp/kazobjs
+          for f in libs/kazmath/src/*.c libs/kazmath/src/GL/*.c; do
+            cc -c -I libs/kazmath/include -I libs/kazmath/include/kazmath \
+               -I libs/kazmath/include/kazmath/GL \
+               -o /tmp/kazobjs/$(basename $f .c).o $f
+          done
+          OFMATH="$HOME/openFrameworks/libs/openFrameworks/math"
+          c++ -std=c++14 tests/test_all.cpp /tmp/kazobjs/*.o \
+            $OFMATH/ofMatrix3x3.cpp \
+            $OFMATH/ofMatrix4x4.cpp \
+            $OFMATH/ofQuaternion.cpp \
+            $OFMATH/ofVec2f.cpp \
+            $OFMATH/ofVec4f.cpp \
+            -I src -I libs/kazmath/include \
+            -I $OFMATH -I $HOME/openFrameworks/libs/glm/include \
+            -o /tmp/test_all
+          /tmp/test_all
+
+  # Same PG-regenerate + build + test flow, but on macOS, proving the
+  # Makefile path works under Apple clang (OF's own macOS CI only covers
+  # xcodebuild).
+  osx:
+    runs-on: macos-14
+    steps:
+      - name: Check out addon
+        uses: actions/checkout@v4
+        with:
+          path: ofxKazmath
+
+      - name: Check out openFrameworks
+        run: git clone --depth 1 --branch "$OF_TAG" https://github.com/openframeworks/openFrameworks.git "$HOME/openFrameworks"
+
+      - name: Download openFrameworks libraries
+        run: "$HOME/openFrameworks/scripts/osx/download_libs.sh"
+
+      - name: Install addon
+        run: cp -r ofxKazmath "$HOME/openFrameworks/addons/ofxKazmath"
+
+      - name: Build projectGenerator
+        run: make Release -C "$HOME/openFrameworks/apps/projectGenerator/commandLine" -j$(sysctl -n hw.ncpu)
+
+      # Regenerates the Xcode project AND the osx Makefile from addons.make
+      # + addon_config.mk, then the Makefile is what gets built below.
+      - name: Regenerate example with projectGenerator
+        run: >-
+          "$HOME/openFrameworks/apps/projectGenerator/commandLine/bin/projectGenerator"
+          -o"$HOME/openFrameworks" -a"ofxKazmath"
+          "$HOME/openFrameworks/addons/ofxKazmath/example"
+
+      - name: Build example with Makefile
+        run: make -C "$HOME/openFrameworks/addons/ofxKazmath/example" -j$(sysctl -n hw.ncpu)
+
+      - name: Build and run tests
+        run: |
+          cd "$HOME/openFrameworks/addons/ofxKazmath"
+          mkdir -p /tmp/kazobjs
+          for f in libs/kazmath/src/*.c libs/kazmath/src/GL/*.c; do
+            cc -c -I libs/kazmath/include -I libs/kazmath/include/kazmath \
+               -I libs/kazmath/include/kazmath/GL \
+               -o /tmp/kazobjs/$(basename $f .c).o $f
+          done
+          OFMATH="$HOME/openFrameworks/libs/openFrameworks/math"
+          c++ -std=c++14 tests/test_all.cpp /tmp/kazobjs/*.o \
+            $OFMATH/ofMatrix3x3.cpp \
+            $OFMATH/ofMatrix4x4.cpp \
+            $OFMATH/ofQuaternion.cpp \
+            $OFMATH/ofVec2f.cpp \
+            $OFMATH/ofVec4f.cpp \
+            -I src -I libs/kazmath/include \
+            -I $OFMATH -I $HOME/openFrameworks/libs/glm/include \
+            -o /tmp/test_all
+          /tmp/test_all
