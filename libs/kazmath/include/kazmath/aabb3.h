@@ -23,8 +23,8 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef KAZMATH_AABB_H_INCLUDED
-#define KAZMATH_AABB_H_INCLUDED
+#ifndef KAZMATH_AABB3D_H_INCLUDED
+#define KAZMATH_AABB3D_H_INCLUDED
 
 #include "vec3.h"
 #include "utility.h"
@@ -37,22 +37,52 @@ extern "C" {
  * A struture that represents an axis-aligned
  * bounding box.
  */
-typedef struct kmAABB {
+typedef struct kmAABB3 {
     kmVec3 min; /** The max corner of the box */
     kmVec3 max; /** The min corner of the box */
-} kmAABB;
+} kmAABB3;
 
 
-kmAABB* kmAABBInitialize(kmAABB* pBox, const kmVec3* centre, const kmScalar width, const kmScalar height, const kmScalar depth);
-int kmAABBContainsPoint(const kmAABB* pBox, const kmVec3* pPoint);
-kmAABB* kmAABBAssign(kmAABB* pOut, const kmAABB* pIn);
-kmAABB* kmAABBScale(kmAABB* pOut, const kmAABB* pIn, kmScalar s);
-kmBool kmAABBIntersectsTriangle(kmAABB* box, const kmVec3* p1, const kmVec3* p2, const kmVec3* p3);
-kmEnum kmAABBContainsAABB(const kmAABB* container, const kmAABB* to_check);
-kmScalar kmAABBDiameterX(const kmAABB* aabb);
-kmScalar kmAABBDiameterY(const kmAABB* aabb);
-kmScalar kmAABBDiameterZ(const kmAABB* aabb);
-kmVec3* kmAABBCentre(const kmAABB* aabb, kmVec3* pOut);
+/**
+    Initializes the AABB around a central point. If centre is NULL
+    then the origin is used. Returns pBox.
+*/
+kmAABB3* kmAABB3Initialize(kmAABB3* pBox, const kmVec3* centre,
+                           const kmScalar width, const kmScalar height,
+                           const kmScalar depth);
+
+/**
+ * Returns KM_TRUE if point is in the specified AABB, returns KM_FALSE
+ * otherwise.
+ */
+int kmAABB3ContainsPoint(const kmAABB3* pBox, const kmVec3* pPoint);
+
+/**
+ * Assigns pIn to pOut, returns pOut.
+ */
+kmAABB3* kmAABB3Assign(kmAABB3* pOut, const kmAABB3* pIn);
+
+/**
+ * Scales pIn by s, stores the resulting AABB in pOut. Returns pOut
+ */
+kmAABB3* kmAABB3Scale(kmAABB3* pOut, const kmAABB3* pIn, kmScalar s);
+kmBool kmAABB3IntersectsTriangle(kmAABB3* box, const kmVec3* p1,
+                                 const kmVec3* p2, const kmVec3* p3);
+kmBool kmAABB3IntersectsAABB(const kmAABB3* box, const kmAABB3* other);
+kmEnum kmAABB3ContainsAABB(const kmAABB3* container, const kmAABB3* to_check);
+kmScalar kmAABB3DiameterX(const kmAABB3* aabb);
+kmScalar kmAABB3DiameterY(const kmAABB3* aabb);
+kmScalar kmAABB3DiameterZ(const kmAABB3* aabb);
+kmVec3* kmAABB3Centre(const kmAABB3* aabb, kmVec3* pOut);
+
+/**
+ * @brief kmAABB3ExpandToContain
+ * @param pOut - The resulting AABB
+ * @param pIn - The original AABB
+ * @param other - Another AABB that you want pIn expanded to contain
+ * @return
+ */
+kmAABB3* kmAABB3ExpandToContain(kmAABB3* pOut, const kmAABB3* pIn, const kmAABB3* other);
 
 #ifdef __cplusplus
 }

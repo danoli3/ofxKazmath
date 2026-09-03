@@ -28,13 +28,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "vec2.h"
 #include "vec3.h"
+#include "vec4.h"
 #include "mat3.h"
 #include "mat4.h"
 #include "utility.h"
 #include "quaternion.h"
 #include "plane.h"
-#include "aabb.h"
+#include "aabb2.h"
+#include "aabb3.h"
 #include "ray2.h"
 #include "ray3.h"
 
-#endif // KAZMATH_H_INCLUDED
+#endif /* KAZMATH_H_INCLUDED */

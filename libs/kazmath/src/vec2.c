@@ -30,6 +30,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "vec2.h"
 #include "utility.h"
 
+const kmVec2 KM_VEC2_POS_Y = { 0, 1 };
+const kmVec2 KM_VEC2_NEG_Y = { 0, -1 };
+const kmVec2 KM_VEC2_NEG_X = { -1, 0 };
+const kmVec2 KM_VEC2_POS_X = { 1, 0 };
+const kmVec2 KM_VEC2_ZERO = { 0, 0 };
+
 kmVec2* kmVec2Fill(kmVec2* pOut, kmScalar x, kmScalar y)
 {
     pOut->x = x;
@@ -55,12 +61,13 @@ kmVec2* kmVec2Lerp(kmVec2* pOut, const kmVec2* pV1, const kmVec2* pV2, kmScalar 
 
 kmVec2* kmVec2Normalize(kmVec2* pOut, const kmVec2* pIn)
 {
+	kmScalar l;
+	kmVec2 v;
         if (!pIn->x && !pIn->y)
                 return kmVec2Assign(pOut, pIn);
 
-	kmScalar l = 1.0f / kmVec2Length(pIn);
+	l = 1.0f / kmVec2Length(pIn);
 
-	kmVec2 v;
 	v.x = pIn->x * l;
 	v.y = pIn->y * l;
     
@@ -137,18 +144,15 @@ kmVec2* kmVec2Scale(kmVec2* pOut, const kmVec2* pIn, const kmScalar s)
 	return pOut;
 }
 
-int kmVec2AreEqual(const kmVec2* p1, const kmVec2* p2)
+kmBool kmVec2AreEqual(const kmVec2* p1, const kmVec2* p2)
 {
-	return (
-				(p1->x < p2->x + kmEpsilon && p1->x > p2->x - kmEpsilon) &&
-				(p1->y < p2->y + kmEpsilon && p1->y > p2->y - kmEpsilon)
-			);
+    if((!kmAlmostEqual(p1->x, p2->x)) || (!kmAlmostEqual(p1->y, p2->y))) {
+        return KM_FALSE;
+    }
+
+    return KM_TRUE;
 }
 
-/**
- * Assigns pIn to pOut. Returns pOut. If pIn and pOut are the same
- * then nothing happens but pOut is still returned
- */
 kmVec2* kmVec2Assign(kmVec2* pOut, const kmVec2* pIn) {
 	if (pOut == pIn) {
 		return pOut;
@@ -160,10 +164,7 @@ kmVec2* kmVec2Assign(kmVec2* pOut, const kmVec2* pIn) {
 	return pOut;
 }
 
-/**
- * Rotates the point anticlockwise around a center
- * by an amount of degrees.
- *
+/*
  * Code ported from Irrlicht: http://irrlicht.sourceforge.net/
  */
 kmVec2* kmVec2RotateBy(kmVec2* pOut, const kmVec2* pIn,
@@ -171,7 +172,8 @@ kmVec2* kmVec2RotateBy(kmVec2* pOut, const kmVec2* pIn,
 {
    kmScalar x, y;
    const kmScalar radians = kmDegreesToRadians(degrees);
-   const kmScalar cs = cos(radians), sn = sin(radians);
+   const kmScalar cs = cosf(radians);
+   const kmScalar sn = sinf(radians);
 
    pOut->x = pIn->x - center->x;
    pOut->y = pIn->y - center->y;
@@ -185,20 +187,20 @@ kmVec2* kmVec2RotateBy(kmVec2* pOut, const kmVec2* pIn,
    return pOut;
 }
 
-/**
- * 	Returns the angle in degrees between the two vectors
- */
 kmScalar kmVec2DegreesBetween(const kmVec2* v1, const kmVec2* v2) {
+	kmVec2 t1, t2;
+	kmScalar cross;
+	kmScalar dot;
+
 	if(kmVec2AreEqual(v1, v2)) {
 		return 0.0;
 	}
 	
-	kmVec2 t1, t2;
 	kmVec2Normalize(&t1, v1);
 	kmVec2Normalize(&t2, v2);
 	
-	kmScalar cross = kmVec2Cross(&t1, &t2);
-	kmScalar dot = kmVec2Dot(&t1, &t2);
+	cross = kmVec2Cross(&t1, &t2);
+	dot = kmVec2Dot(&t1, &t2);
 
 	/*
 	 * acos is only defined for -1 to 1. Outside the range we 
@@ -212,17 +214,12 @@ kmScalar kmVec2DegreesBetween(const kmVec2* v1, const kmVec2* v2) {
 	return kmRadiansToDegrees(atan2(cross, dot));
 }
 
-/**
- * Returns the distance between the two points
- */
 kmScalar kmVec2DistanceBetween(const kmVec2* v1, const kmVec2* v2) {
 	kmVec2 diff;
 	kmVec2Subtract(&diff, v2, v1);
 	return fabs(kmVec2Length(&diff));
 }
-/**
- * Returns the point mid-way between two others
- */
+
 kmVec2* kmVec2MidPointBetween(kmVec2* pOut, const kmVec2* v1, const kmVec2* v2) {
 	kmVec2 sum;
     kmVec2Add(&sum, v1, v2);
@@ -230,4 +227,21 @@ kmVec2* kmVec2MidPointBetween(kmVec2* pOut, const kmVec2* v1, const kmVec2* v2) 
     pOut->y = sum.y / 2.0f;
 
 	return pOut;
+}
+
+kmVec2* kmVec2Reflect(kmVec2* pOut, const kmVec2* pIn, const kmVec2* normal) {
+	kmVec2 tmp;
+	kmVec2Scale(&tmp, normal, 2.0f * kmVec2Dot(pIn, normal));
+	kmVec2Subtract(pOut, pIn, &tmp);
+
+	return pOut;
+}
+
+void kmVec2Swap(kmVec2* pA, kmVec2* pB) {
+  kmScalar x = pA->x;
+  kmScalar y = pA->y;
+  pA->x = pB->x;
+  pA->y = pB->y;
+  pB->x = x;
+  pB->y = y;
 }

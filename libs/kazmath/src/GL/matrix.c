@@ -31,8 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "matrix.h"
 #include "mat4stack.h"
 
-// ---
-// Begin additions by Tobias Lensing for icedcoffee-framework.org
+/* ---
+ * Begin additions by Tobias Lensing for icedcoffee-framework.org */
 
 typedef struct km_mat4_stack_context {
     km_mat4_stack modelview_matrix_stack;
@@ -84,12 +84,14 @@ km_mat4_stack_context *lookUpContext(void *contextRef)
 
 km_mat4_stack_context *registerContext(void *contextRef)
 {
+    km_mat4_stack_context *existingContext = NULL;
     lazyInitialize();
     
-    km_mat4_stack_context *existingContext = lookUpContext(contextRef);
+    existingContext = lookUpContext(contextRef);
     if (!existingContext) {
         km_mat4_stack_context_list *entry = contexts;
         km_mat4_stack_context_list *last = NULL;
+        km_mat4_stack_context_list *newEntry = NULL;
         
         pthread_mutex_lock(&contexts_mutex);
         if (entry) {
@@ -99,7 +101,7 @@ km_mat4_stack_context *registerContext(void *contextRef)
         }
         pthread_mutex_unlock(&contexts_mutex);
         
-        km_mat4_stack_context_list *newEntry = (km_mat4_stack_context_list *)malloc(sizeof(km_mat4_stack_context_list));
+        newEntry = (km_mat4_stack_context_list *)malloc(sizeof(km_mat4_stack_context_list));
         memset(newEntry, 0, sizeof(km_mat4_stack_context_list));
         newEntry->context.contextRef = contextRef;
         newEntry->context.entry = newEntry;
@@ -133,22 +135,22 @@ void *kmGLGetCurrentContext()
 
 void kmGLClearContext(km_mat4_stack_context *context)
 {
-    // Unlink current context from linked list
+    /* Unlink current context from linked list*/
     if (context->entry->prev)
         context->entry->prev->next = context->entry->next;
 	
-    //Clear the matrix stacks
+    /*Clear the matrix stacks*/
 	km_mat4_stack_release(&context->modelview_matrix_stack);
 	km_mat4_stack_release(&context->projection_matrix_stack);
 	km_mat4_stack_release(&context->texture_matrix_stack);
     
-	//Delete the matrices
+	/*Delete the matrices*/
 	context->initialized = 0;
     
-    //Set the current stack to point nowhere
+    /*Set the current stack to point nowhere*/
 	context->current_stack = NULL;
     
-    // Free the list entry, including its stacks
+    /* Free the list entry, including its stacks*/
     free(context->entry);
 }
 
@@ -168,8 +170,8 @@ void kmGLClearAllContexts()
     pthread_setspecific(current_context_key, NULL);
 }
 
-// End additions by Tobias Lensing for icedcoffee-framework.org
-// ---
+/* End additions by Tobias Lensing for icedcoffee-framework.org
+ * --- */
 
 km_mat4_stack_context *lazyInitializeCurrentContext()
 {
@@ -178,16 +180,16 @@ km_mat4_stack_context *lazyInitializeCurrentContext()
     assert(current_context != NULL && "No context set");
     
 	if (current_context && !current_context->initialized) {
-		kmMat4 identity; //Temporary identity matrix
+		kmMat4 identity; /*Temporary identity matrix*/
 
-		//Initialize all 3 stacks
-		//modelview_matrix_stack = (km_mat4_stack*) malloc(sizeof(km_mat4_stack));
+		/*Initialize all 3 stacks*/
+		/*modelview_matrix_stack = (km_mat4_stack*) malloc(sizeof(km_mat4_stack));*/
 		km_mat4_stack_initialize(&current_context->modelview_matrix_stack);
 
-		//projection_matrix_stack = (km_mat4_stack*) malloc(sizeof(km_mat4_stack));
+		/*projection_matrix_stack = (km_mat4_stack*) malloc(sizeof(km_mat4_stack));*/
 		km_mat4_stack_initialize(&current_context->projection_matrix_stack);
 
-		//texture_matrix_stack = (km_mat4_stack*) malloc(sizeof(km_mat4_stack));
+		/*texture_matrix_stack = (km_mat4_stack*) malloc(sizeof(km_mat4_stack));*/
 		km_mat4_stack_initialize(&current_context->texture_matrix_stack);
 
 		current_context->current_stack = &current_context->modelview_matrix_stack;
@@ -195,7 +197,7 @@ km_mat4_stack_context *lazyInitializeCurrentContext()
 
 		kmMat4Identity(&identity);
 
-		//Make sure that each stack has the identity matrix
+		/*Make sure that each stack has the identity matrix*/
 		km_mat4_stack_push(&current_context->modelview_matrix_stack, &identity);
 		km_mat4_stack_push(&current_context->projection_matrix_stack, &identity);
 		km_mat4_stack_push(&current_context->texture_matrix_stack, &identity);
@@ -220,7 +222,7 @@ void kmGLMatrixMode(kmGLEnum mode)
 			current_context->current_stack = &current_context->texture_matrix_stack;
 		break;
 		default:
-			assert(0 && "Invalid matrix mode specified"); //TODO: Proper error handling
+			assert(0 && "Invalid matrix mode specified"); /*TODO: Proper error handling*/
 		break;
 	}
 }
@@ -231,7 +233,7 @@ void kmGLPushMatrix(void)
 
 	km_mat4_stack_context *current_context = lazyInitializeCurrentContext();
 
-	//Duplicate the top of the stack (i.e the current matrix)	
+	/*Duplicate the top of the stack (i.e the current matrix)	*/
 	kmMat4Assign(&top, current_context->current_stack->top);
 	km_mat4_stack_push(current_context->current_stack, &top);
 }
@@ -240,14 +242,14 @@ void kmGLPopMatrix(void)
 {
 	km_mat4_stack_context *current_context = pthread_getspecific(current_context_key);
     assert(current_context->initialized && "Cannot Pop empty matrix stack");
-	//No need to lazy initialize, you shouldnt be popping first anyway!
+	/*No need to lazy initialize, you shouldnt be popping first anyway!*/
 	km_mat4_stack_pop(current_context->current_stack, NULL);
 }
 
 void kmGLLoadIdentity()
 {
 	km_mat4_stack_context *current_context = lazyInitializeCurrentContext();
-	kmMat4Identity(current_context->current_stack->top); //Replace the top matrix with the identity matrix
+	kmMat4Identity(current_context->current_stack->top); /*Replace the top matrix with the identity matrix*/
 }
 
 void kmGLMultMatrix(const kmMat4* pIn)
@@ -278,7 +280,7 @@ void kmGLGetMatrix(kmGLEnum mode, kmMat4* pOut)
 			kmMat4Assign(pOut, current_context->texture_matrix_stack.top);
 		break;
 		default:
-			assert(1 && "Invalid matrix mode specified"); //TODO: Proper error handling
+			assert(1 && "Invalid matrix mode specified"); /*TODO: Proper error handling*/
 		break;
 	}
 }
@@ -289,10 +291,10 @@ void kmGLTranslatef(float x, float y, float z)
 
 	kmMat4 translation;
 
-	//Create a rotation matrix using the axis and the angle
+	/*Create a rotation matrix using the axis and the angle*/
 	kmMat4Translation(&translation,x,y,z);
 
-	//Multiply the rotation matrix by the current matrix
+	/*Multiply the rotation matrix by the current matrix*/
 	kmMat4Multiply(current_context->current_stack->top, current_context->current_stack->top, &translation);
 }
 
@@ -303,13 +305,13 @@ void kmGLRotatef(float angle, float x, float y, float z)
 	kmVec3 axis;
 	kmMat4 rotation;
 
-	//Create an axis vector
+	/*Create an axis vector*/
 	kmVec3Fill(&axis, x, y, z);
 
-	//Create a rotation matrix using the axis and the angle
+	/*Create a rotation matrix using the axis and the angle*/
 	kmMat4RotationAxisAngle(&rotation, &axis, kmDegreesToRadians(angle));
 
-	//Multiply the rotation matrix by the current matrix
+	/*Multiply the rotation matrix by the current matrix*/
 	kmMat4Multiply(current_context->current_stack->top, current_context->current_stack->top, &rotation);
 }
 

@@ -27,12 +27,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define UTILITY_H_INCLUDED
 
 #include <math.h>
+#include <float.h>
 
 #ifndef kmScalar
 #ifdef USE_DOUBLE_PRECISION
 #define kmScalar double
+#define kmEpsilon DBL_EPSILON
 #else
 #define kmScalar float
+#define kmEpsilon FLT_EPSILON
 #endif
 
 #endif
@@ -65,21 +68,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define KM_TRUE 1
 #endif
 
-#define kmPI 3.141592f
-#define kmPIOver180 0.017453f //  PI / 180
-#define kmPIUnder180 57.295779f // 180 / PI
-#define kmEpsilon 0.0001
+#define kmPI 3.14159265358979323846f
+#define kmPIOver180  (kmPI / 180.0f)
+#define kmPIUnder180 (180.0 / kmPI)
 
-#define KM_CONTAINS_NONE 0
-#define KM_CONTAINS_PARTIAL 1
-#define KM_CONTAINS_ALL 2
+#define KM_CONTAINS_NONE (kmEnum)0
+#define KM_CONTAINS_PARTIAL (kmEnum)1
+#define KM_CONTAINS_ALL (kmEnum)2
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/**
+ * Returns the square of s (e.g. s*s)
+ */
 extern kmScalar kmSQR(kmScalar s);
+
+/**
+ * Returns degrees as radians.
+ */
 extern kmScalar kmDegreesToRadians(kmScalar degrees);
+
+/**
+ * Returns radians as degrees
+ */
 extern kmScalar kmRadiansToDegrees(kmScalar radians);
 
 extern kmScalar kmMin(kmScalar lhs, kmScalar rhs);

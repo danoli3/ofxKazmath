@@ -23,18 +23,16 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "aabb.h"
+#include <stdlib.h>
+#include "aabb3.h"
 
 
-/**
-    Initializes the AABB around a central point. If centre is NULL then the origin
-    is used. Returns pBox.
-*/
-kmAABB* kmAABBInitialize(kmAABB* pBox, const kmVec3* centre, const kmScalar width, const kmScalar height, const kmScalar depth) {
+kmAABB3* kmAABB3Initialize(kmAABB3* pBox, const kmVec3* centre, const kmScalar width, const kmScalar height, const kmScalar depth) {
+    kmVec3 origin;
+    kmVec3* point;
     if(!pBox) return 0;
     
-    kmVec3 origin;
-    kmVec3* point = centre ? (kmVec3*) centre : &origin;
+    point = centre ? (kmVec3*) centre : &origin;
     kmVec3Zero(&origin);
     
     pBox->min.x = point->x - (width / 2);
@@ -48,11 +46,7 @@ kmAABB* kmAABBInitialize(kmAABB* pBox, const kmVec3* centre, const kmScalar widt
     return pBox;
 }
 
-/**
- * Returns KM_TRUE if point is in the specified AABB, returns
- * KM_FALSE otherwise.
- */
-int kmAABBContainsPoint(const kmAABB* pBox, const kmVec3* pPoint)
+int kmAABB3ContainsPoint(const kmAABB3* pBox, const kmVec3* pPoint)
 {
     if(pPoint->x >= pBox->min.x && pPoint->x <= pBox->max.x &&
        pPoint->y >= pBox->min.y && pPoint->y <= pBox->max.y &&
@@ -63,31 +57,52 @@ int kmAABBContainsPoint(const kmAABB* pBox, const kmVec3* pPoint)
     return KM_FALSE;
 }
 
-/**
- * Assigns pIn to pOut, returns pOut.
- */
-kmAABB* kmAABBAssign(kmAABB* pOut, const kmAABB* pIn)
+kmAABB3* kmAABB3Assign(kmAABB3* pOut, const kmAABB3* pIn)
 {
     kmVec3Assign(&pOut->min, &pIn->min);
     kmVec3Assign(&pOut->max, &pIn->max);
     return pOut;
 }
 
-/**
- * Scales pIn by s, stores the resulting AABB in pOut. Returns pOut
- */
-kmAABB* kmAABBScale(kmAABB* pOut, const kmAABB* pIn, kmScalar s)
+kmAABB3* kmAABB3Scale(kmAABB3* pOut, const kmAABB3* pIn, kmScalar s)
 {
 	assert(0 && "Not implemented");
     return pOut;
 }
 
-kmBool kmAABBIntersectsTriangle(kmAABB* box, const kmVec3* p1, const kmVec3* p2, const kmVec3* p3) {
+kmBool kmAABB3IntersectsTriangle(kmAABB3* box, const kmVec3* p1, const kmVec3* p2, const kmVec3* p3) {
     assert(0 && "Not implemented");
     return KM_TRUE;
 }
 
-kmEnum kmAABBContainsAABB(const kmAABB* container, const kmAABB* to_check) {
+kmBool kmAABB3IntersectsAABB(const kmAABB3* box, const kmAABB3* other) {
+    /* Probably should store center point and radius for things like this */
+
+    kmScalar acx = (box->min.x + box->max.x) * 0.5;
+    kmScalar acy = (box->min.y + box->max.y) * 0.5;
+    kmScalar acz = (box->min.z + box->max.z) * 0.5;
+
+    kmScalar bcx = (other->min.x + other->max.x) * 0.5;
+    kmScalar bcy = (other->min.y + other->max.y) * 0.5;
+    kmScalar bcz = (other->min.z + other->max.z) * 0.5;
+
+    kmScalar arx = (box->max.x - box->min.x) * 0.5;
+    kmScalar ary = (box->max.y - box->min.y) * 0.5;
+    kmScalar arz = (box->max.z - box->min.z) * 0.5;
+
+    kmScalar brx = (other->max.x - other->min.x) * 0.5;
+    kmScalar bry = (other->max.y - other->min.y) * 0.5;
+    kmScalar brz = (other->max.z - other->min.z) * 0.5;
+
+    kmBool x = abs(acx - bcx) <= (arx + brx);
+    kmBool y = abs(acy - bcy) <= (ary + bry);
+    kmBool z = abs(acz - bcz) <= (arz + brz);
+
+    return x && y && z;
+}
+
+kmEnum kmAABB3ContainsAABB(const kmAABB3* container, const kmAABB3* to_check) {
+    kmUchar i;
     kmVec3 corners[8];
     kmEnum result = KM_CONTAINS_ALL;
     kmBool found = KM_FALSE;
@@ -101,12 +116,12 @@ kmEnum kmAABBContainsAABB(const kmAABB* container, const kmAABB* to_check) {
     kmVec3Fill(&corners[6], to_check->max.x, to_check->max.y, to_check->max.z);
     kmVec3Fill(&corners[7], to_check->min.x, to_check->max.y, to_check->max.z);
         
-    for(kmUchar i = 0; i < 8; ++i) {
-        if(!kmAABBContainsPoint(container, &corners[i])) {
+    for(i = 0; i < 8; ++i) {
+        if(!kmAABB3ContainsPoint(container, &corners[i])) {
             result = KM_CONTAINS_PARTIAL;
             if(found) {
-                //If we previously found a corner that was within the container
-                //We know that partial is the final result
+                /*If we previously found a corner that was within the container*/
+                /*We know that partial is the final result*/
                 return result;
             }
         } else {
@@ -121,21 +136,35 @@ kmEnum kmAABBContainsAABB(const kmAABB* container, const kmAABB* to_check) {
     return result;
 }
 
-kmScalar kmAABBDiameterX(const kmAABB* aabb) {
+kmScalar kmAABB3DiameterX(const kmAABB3* aabb) {
     return fabs(aabb->max.x - aabb->min.x);
 }
 
-kmScalar kmAABBDiameterY(const kmAABB* aabb) {
+kmScalar kmAABB3DiameterY(const kmAABB3* aabb) {
     return fabs(aabb->max.y - aabb->min.y);
 }
 
-kmScalar kmAABBDiameterZ(const kmAABB* aabb) {
+kmScalar kmAABB3DiameterZ(const kmAABB3* aabb) {
     return fabs(aabb->max.z - aabb->min.z);
 }
 
-kmVec3* kmAABBCentre(const kmAABB* aabb, kmVec3* pOut) {
+kmVec3* kmAABB3Centre(const kmAABB3* aabb, kmVec3* pOut) {
     kmVec3Add(pOut, &aabb->min, &aabb->max);
     kmVec3Scale(pOut, pOut, 0.5);
     return pOut;
 }
 
+kmAABB3* kmAABB3ExpandToContain(kmAABB3* pOut, const kmAABB3* pIn, const kmAABB3* other) {
+    kmAABB3 result;
+
+    result.min.x = (pIn->min.x < other->min.x)?pIn->min.x:other->min.x;
+    result.max.x = (pIn->max.x > other->max.x)?pIn->max.x:other->max.x;
+    result.min.y = (pIn->min.y < other->min.y)?pIn->min.y:other->min.y;
+    result.max.y = (pIn->max.y > other->max.y)?pIn->max.y:other->max.y;
+    result.min.z = (pIn->min.z < other->min.z)?pIn->min.z:other->min.z;
+    result.max.z = (pIn->max.z > other->max.z)?pIn->max.z:other->max.z;
+
+    kmAABB3Assign(pOut, &result);
+
+    return pOut;
+}

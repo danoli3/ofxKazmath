@@ -37,24 +37,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "quaternion.h"
 #include "plane.h"
 
-/**
- * Fills a kmMat4 structure with the values from a 16
- * element array of kmScalars
- * @Params pOut - A pointer to the destination matrix
- * 		   pMat - A 16 element array of kmScalars
- * @Return Returns pOut so that the call can be nested
- */
 kmMat4* kmMat4Fill(kmMat4* pOut, const kmScalar* pMat)
 {
     memcpy(pOut->mat, pMat, sizeof(kmScalar) * 16);
     return pOut;
 }
 
-/**
- * Sets pOut to an identity matrix returns pOut
- * @Params pOut - A pointer to the matrix to set to identity
- * @Return Returns pOut so that the call can be nested
- */
 kmMat4* kmMat4Identity(kmMat4* pOut)
 {
 	memset(pOut->mat, 0, sizeof(kmScalar) * 16);
@@ -62,14 +50,9 @@ kmMat4* kmMat4Identity(kmMat4* pOut)
 	return pOut;
 }
 
-/**
- * Calculates the inverse of pM and stores the result in
- * pOut.
- * @Return Returns NULL if there is no inverse, else pOut
- */
 kmMat4* kmMat4Inverse(kmMat4* pOut, const kmMat4* pM) {
     kmMat4 tmp;
-    double det;
+    kmScalar det;
     int i;
 
     tmp.mat[0] = pM->mat[5]  * pM->mat[10] * pM->mat[15] -
@@ -198,10 +181,7 @@ kmMat4* kmMat4Inverse(kmMat4* pOut, const kmMat4* pM) {
 
     return pOut;
 }
-/**
- * Returns KM_TRUE if pIn is an identity matrix
- * KM_FALSE otherwise
- */
+
 int  kmMat4IsIdentity(const kmMat4* pIn)
 {
 	static kmScalar identity [] = { 	1.0f, 0.0f, 0.0f, 0.0f,
@@ -213,9 +193,6 @@ int  kmMat4IsIdentity(const kmMat4* pIn)
 	return (memcmp(identity, pIn->mat, sizeof(kmScalar) * 16) == 0);
 }
 
-/**
- * Sets pOut to the transpose of pIn, returns pOut
- */
 kmMat4* kmMat4Transpose(kmMat4* pOut, const kmMat4* pIn)
 {
     int x, z;
@@ -229,9 +206,6 @@ kmMat4* kmMat4Transpose(kmMat4* pOut, const kmMat4* pIn)
     return pOut;
 }
 
-/**
- * Multiplies pM1 with pM2, stores the result in pOut, returns pOut
- */
 kmMat4* kmMat4Multiply(kmMat4* pOut, const kmMat4* pM1, const kmMat4* pM2)
 {
 	kmScalar mat[16];
@@ -264,9 +238,6 @@ kmMat4* kmMat4Multiply(kmMat4* pOut, const kmMat4* pM1, const kmMat4* pM2)
 	return pOut;
 }
 
-/**
- * Assigns the value of pIn to pOut
- */
 kmMat4* kmMat4Assign(kmMat4* pOut, const kmMat4* pIn)
 {
 	assert(pOut != pIn && "You have tried to self-assign!!");
@@ -298,9 +269,6 @@ kmMat4* kmMat4AssignMat3(kmMat4* pOut, const kmMat3* pIn) {
 }
 
 
-/**
- * Returns KM_TRUE if the 2 matrices are equal (approximately)
- */
 int kmMat4AreEqual(const kmMat4* pMat1, const kmMat4* pMat2)
 {
     int i = 0;
@@ -309,8 +277,7 @@ int kmMat4AreEqual(const kmMat4* pMat1, const kmMat4* pMat2)
 
 	for (i = 0; i < 16; ++i)
 	{
-		if (!(pMat1->mat[i] + kmEpsilon > pMat2->mat[i] &&
-            pMat1->mat[i] - kmEpsilon < pMat2->mat[i])) {
+        if(!kmAlmostEqual(pMat1->mat[i], pMat2->mat[i])) {
 			return KM_FALSE;
         }
 	}
@@ -318,10 +285,6 @@ int kmMat4AreEqual(const kmMat4* pMat1, const kmMat4* pMat2)
 	return KM_TRUE;
 }
 
-/**
- * Build a rotation matrix from an axis and an angle. Result is stored in pOut.
- * pOut is returned.
- */
 kmMat4* kmMat4RotationAxisAngle(kmMat4* pOut, const kmVec3* axis, kmScalar radians)
 {
     kmQuaternion quat;
@@ -330,9 +293,6 @@ kmMat4* kmMat4RotationAxisAngle(kmMat4* pOut, const kmVec3* axis, kmScalar radia
     return pOut;
 }
 
-/**
- * Builds an X-axis rotation matrix and stores it in pOut, returns pOut
- */
 kmMat4* kmMat4RotationX(kmMat4* pOut, const kmScalar radians)
 {
 	/*
@@ -366,10 +326,6 @@ kmMat4* kmMat4RotationX(kmMat4* pOut, const kmScalar radians)
 	return pOut;
 }
 
-/**
- * Builds a rotation matrix using the rotation around the Y-axis
- * The result is stored in pOut, pOut is returned.
- */
 kmMat4* kmMat4RotationY(kmMat4* pOut, const kmScalar radians)
 {
 	/*
@@ -402,10 +358,6 @@ kmMat4* kmMat4RotationY(kmMat4* pOut, const kmScalar radians)
 	return pOut;
 }
 
-/**
- * Builds a rotation matrix around the Z-axis. The resulting
- * matrix is stored in pOut. pOut is returned.
- */
 kmMat4* kmMat4RotationZ(kmMat4* pOut, const kmScalar radians)
 {
 	/*
@@ -438,20 +390,17 @@ kmMat4* kmMat4RotationZ(kmMat4* pOut, const kmScalar radians)
 	return pOut;
 }
 
-/**
- * Builds a rotation matrix from pitch, yaw and roll. The resulting
- * matrix is stored in pOut and pOut is returned
- */
 kmMat4* kmMat4RotationYawPitchRoll(kmMat4* pOut, const kmScalar pitch, const kmScalar yaw, const kmScalar roll)
 {
 
     kmMat4 yaw_matrix;
+    kmMat4 roll_matrix;
+    kmMat4 pitch_matrix;
+
     kmMat4RotationY(&yaw_matrix, yaw);
 
-    kmMat4 pitch_matrix;
     kmMat4RotationX(&pitch_matrix, pitch);
 
-    kmMat4 roll_matrix;
     kmMat4RotationZ(&roll_matrix, roll);
 
     kmMat4Multiply(pOut, &pitch_matrix, &roll_matrix);
@@ -460,11 +409,8 @@ kmMat4* kmMat4RotationYawPitchRoll(kmMat4* pOut, const kmScalar pitch, const kmS
     return pOut;
 }
 
-/** Converts a quaternion to a rotation matrix,
- * the result is stored in pOut, returns pOut
- */
 kmMat4* kmMat4RotationQuaternion(kmMat4* pOut, const kmQuaternion* pQ)
-{    
+{
     double xx = pQ->x * pQ->x;
     double xy = pQ->x * pQ->y;
     double xz = pQ->x * pQ->z;
@@ -500,7 +446,6 @@ kmMat4* kmMat4RotationQuaternion(kmMat4* pOut, const kmQuaternion* pQ)
     return pOut;
 }
 
-/** Builds a scaling matrix */
 kmMat4* kmMat4Scaling(kmMat4* pOut, const kmScalar x, const kmScalar y,
                       kmScalar z)
 {
@@ -513,14 +458,10 @@ kmMat4* kmMat4Scaling(kmMat4* pOut, const kmScalar x, const kmScalar y,
 	return pOut;
 }
 
-/**
- * Builds a translation matrix. All other elements in the matrix
- * will be set to zero except for the diagonal which is set to 1.0
- */
 kmMat4* kmMat4Translation(kmMat4* pOut, const kmScalar x,
                           kmScalar y, const kmScalar z)
 {
-    //FIXME: Write a test for this
+    /*FIXME: Write a test for this*/
     memset(pOut->mat, 0, sizeof(kmScalar) * 16);
 
     pOut->mat[0] = 1.0f;
@@ -535,11 +476,6 @@ kmMat4* kmMat4Translation(kmMat4* pOut, const kmScalar x,
     return pOut;
 }
 
-/**
- * Get the up vector from a matrix. pIn is the matrix you
- * wish to extract the vector from. pOut is a pointer to the
- * kmVec3 structure that should hold the resulting vector
- */
 kmVec3* kmMat4GetUpVec3(kmVec3* pOut, const kmMat4* pIn)
 {
     kmVec3MultiplyMat4(pOut, &KM_VEC3_POS_Y, pIn);
@@ -547,9 +483,6 @@ kmVec3* kmMat4GetUpVec3(kmVec3* pOut, const kmMat4* pIn)
     return pOut;
 }
 
-/** Extract the right vector from a 4x4 matrix. The result is
- * stored in pOut. Returns pOut.
- */
 kmVec3* kmMat4GetRightVec3(kmVec3* pOut, const kmMat4* pIn)
 {
     kmVec3MultiplyMat4(pOut, &KM_VEC3_POS_X, pIn);
@@ -557,10 +490,6 @@ kmVec3* kmMat4GetRightVec3(kmVec3* pOut, const kmMat4* pIn)
     return pOut;
 }
 
-/**
- * Extract the forward vector from a 4x4 matrix. The result is
- * stored in pOut. Returns pOut.
- */
 kmVec3* kmMat4GetForwardVec3RH(kmVec3* pOut, const kmMat4* pIn)
 {
     kmVec3MultiplyMat4(pOut, &KM_VEC3_NEG_Z, pIn);
@@ -575,38 +504,33 @@ kmVec3* kmMat4GetForwardVec3LH(kmVec3* pOut, const kmMat4* pIn)
 	return pOut;
 }
 
-/**
- * Creates a perspective projection matrix in the
- * same way as gluPerspective
- */
 kmMat4* kmMat4PerspectiveProjection(kmMat4* pOut, kmScalar fovY,
                                     kmScalar aspect, kmScalar zNear,
                                     kmScalar zFar)
 {
 	kmScalar r = kmDegreesToRadians(fovY / 2);
-	kmScalar deltaZ = zFar - zNear;
+    kmScalar deltaZ = zNear - zFar;
 	kmScalar s = sin(r);
-    kmScalar cotangent = 0;
+	kmScalar cotangent = 0;
 
 	if (deltaZ == 0 || s == 0 || aspect == 0) {
 		return NULL;
 	}
 
-    //cos(r) / sin(r) = cot(r)
+    /*cos(r) / sin(r) = cot(r)*/
 	cotangent = cos(r) / s;
 
 	kmMat4Identity(pOut);
 	pOut->mat[0] = cotangent / aspect;
 	pOut->mat[5] = cotangent;
-	pOut->mat[10] = -(zFar + zNear) / deltaZ;
+    pOut->mat[10] = (zFar + zNear) / deltaZ;
 	pOut->mat[11] = -1;
-	pOut->mat[14] = -2 * zNear * zFar / deltaZ;
+    pOut->mat[14] = (2 * zFar * zNear) / deltaZ;
 	pOut->mat[15] = 0;
 
 	return pOut;
 }
 
-/** Creates an orthographic projection matrix like glOrtho */
 kmMat4* kmMat4OrthographicProjection(kmMat4* pOut, kmScalar left,
                                      kmScalar right, kmScalar bottom,
                                      kmScalar top, kmScalar nearVal,
@@ -627,53 +551,45 @@ kmMat4* kmMat4OrthographicProjection(kmMat4* pOut, kmScalar left,
 	return pOut;
 }
 
-/**
- * Builds a translation matrix in the same way as gluLookAt()
- * the resulting matrix is stored in pOut. pOut is returned.
- */
 kmMat4* kmMat4LookAt(kmMat4* pOut, const kmVec3* pEye,
                      const kmVec3* pCenter, const kmVec3* pUp)
 {
-    kmVec3 f, up, s, u;
-    kmMat4 translate;
+    kmVec3 f;
+    kmVec3 s;
+    kmVec3 u;
 
     kmVec3Subtract(&f, pCenter, pEye);
     kmVec3Normalize(&f, &f);
 
-    kmVec3Assign(&up, pUp);
-    kmVec3Normalize(&up, &up);
-
-    kmVec3Cross(&s, &f, &up);
+    kmVec3Cross(&s, &f, pUp);
     kmVec3Normalize(&s, &s);
 
     kmVec3Cross(&u, &s, &f);
-    kmVec3Normalize(&s, &s);
-
-    kmMat4Identity(pOut);
 
     pOut->mat[0] = s.x;
-    pOut->mat[4] = s.y;
-    pOut->mat[8] = s.z;
-
     pOut->mat[1] = u.x;
-    pOut->mat[5] = u.y;
-    pOut->mat[9] = u.z;
-
     pOut->mat[2] = -f.x;
-    pOut->mat[6] = -f.y;
-    pOut->mat[10] = -f.z;
+    pOut->mat[3] = 0.0;
 
-    kmMat4Translation(&translate, -pEye->x, -pEye->y, -pEye->z);
-    kmMat4Multiply(pOut, pOut, &translate);
+    pOut->mat[4] = s.y;
+    pOut->mat[5] = u.y;
+    pOut->mat[6] = -f.y;
+    pOut->mat[7] = 0.0;
+
+    pOut->mat[8] = s.z;
+    pOut->mat[9] = u.z;
+    pOut->mat[10] = -f.z;
+    pOut->mat[11] = 0.0;
+
+    pOut->mat[12] = -kmVec3Dot(&s, pEye);
+    pOut->mat[13] = -kmVec3Dot(&u, pEye);
+    pOut->mat[14] = kmVec3Dot(&f, pEye);
+    pOut->mat[15] = 1.0;
 
     return pOut;
 }
 
-/**
- * Extract a 3x3 rotation matrix from the input 4x4 transformation.
- * Stores the result in pOut, returns pOut
- */
-kmMat3* kmMat4ExtractRotation(kmMat3* pOut, const kmMat4* pIn)
+kmMat3* kmMat4ExtractRotationMat3(const kmMat4* pIn, kmMat3* pOut)
 {
     pOut->mat[0] = pIn->mat[0];
     pOut->mat[1] = pIn->mat[1];
@@ -690,25 +606,17 @@ kmMat3* kmMat4ExtractRotation(kmMat3* pOut, const kmMat4* pIn)
     return pOut;
 }
 
-/**
- * Take the rotation from a 4x4 transformation matrix, and return it as an axis and an angle (in radians)
- * returns the output axis.
- */
 kmVec3* kmMat4RotationToAxisAngle(kmVec3* pAxis, kmScalar* radians, const kmMat4* pIn)
 {
     /*Surely not this easy?*/
     kmQuaternion temp;
     kmMat3 rotation;
-    kmMat4ExtractRotation(&rotation, pIn);
+    kmMat4ExtractRotationMat3(pIn, &rotation);
     kmQuaternionRotationMatrix(&temp, &rotation);
     kmQuaternionToAxisAngle(&temp, pAxis, radians);
     return pAxis;
 }
 
-/** Build a 4x4 OpenGL transformation matrix using a 3x3 rotation matrix,
- * and a 3d vector representing a translation. Assign the result to pOut,
- * pOut is also returned.
- */
 kmMat4* kmMat4RotationTranslation(kmMat4* pOut, const kmMat3* rotation, const kmVec3* translation)
 {
     pOut->mat[0] = rotation->mat[0];
@@ -787,5 +695,12 @@ kmPlane* kmMat4ExtractPlane(kmPlane* pOut, const kmMat4* pIn, const kmEnum plane
     pOut->c /= t;
     pOut->d /= t;
 
+    return pOut;
+}
+
+kmVec3* kmMat4ExtractTranslationVec3(const kmMat4* pIn, struct kmVec3* pOut) {
+    pOut->x = pIn->mat[12];
+    pOut->y = pIn->mat[13];
+    pOut->z = pIn->mat[14];
     return pOut;
 }
