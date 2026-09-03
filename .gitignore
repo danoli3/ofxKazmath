@@ -13,3 +13,7 @@
 *.a
 /example/bin/exampleDebug.app
 /example/example.xcodeproj
+/example/.vscode
+/example/obj
+example/example.code-workspace
+example/.DS_Store
