@@ -1,7 +1,5 @@
 Kazmath is a 3D math library aimed at game programming. It is released under the modified BSD license.
 
-https://github.com/Kazade/kazmath
-
 Authors
 
 Luke Benstead
