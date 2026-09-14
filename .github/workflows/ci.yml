@@ -13,12 +13,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Check out addon
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ofxKazmath
 
+      # --recurse-submodules is required: apps/projectGenerator itself is a
+      # submodule, and without it the PG build step has no source to build.
       - name: Check out openFrameworks
-        run: git clone --depth 1 --branch "$OF_TAG" https://github.com/openframeworks/openFrameworks.git "$HOME/openFrameworks"
+        run: git clone --depth 1 --recurse-submodules --branch "$OF_TAG" https://github.com/openframeworks/openFrameworks.git "$HOME/openFrameworks"
 
       - name: Install Linux dependencies
         run: sudo "$HOME/openFrameworks/scripts/linux/ubuntu/install_dependencies.sh" -y
@@ -77,12 +79,14 @@ jobs:
       SDKROOT: "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
     steps:
       - name: Check out addon
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: ofxKazmath
 
+      # --recurse-submodules is required: apps/projectGenerator itself is a
+      # submodule, and without it the PG build step has nothing to build.
       - name: Check out openFrameworks
-        run: git clone --depth 1 --branch "$OF_TAG" https://github.com/openframeworks/openFrameworks.git "$HOME/openFrameworks"
+        run: git clone --depth 1 --recurse-submodules --branch "$OF_TAG" https://github.com/openframeworks/openFrameworks.git "$HOME/openFrameworks"
 
       - name: Download openFrameworks libraries
         run: "$HOME/openFrameworks/scripts/osx/download_libs.sh"
@@ -90,8 +94,11 @@ jobs:
       - name: Install addon
         run: cp -r ofxKazmath "$HOME/openFrameworks/addons/ofxKazmath"
 
+      # Per the PG docs, macOS builds go through xcodebuild, not make.
       - name: Build projectGenerator
-        run: make Release -C "$HOME/openFrameworks/apps/projectGenerator/commandLine" -j$(sysctl -n hw.ncpu)
+        run: |
+          cd "$HOME/openFrameworks/apps/projectGenerator/commandLine"
+          xcodebuild -configuration Release -target commandLine CODE_SIGN_IDENTITY="" -project commandLine.xcodeproj
 
       # Regenerates the Xcode project AND the osx Makefile from addons.make
       # + addon_config.mk, then the Makefile is what gets built below.
